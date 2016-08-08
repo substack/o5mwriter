@@ -3,10 +3,11 @@
 #include <stdlib.h>
 
 int main (int argc, char **argv) {
-  o5mwriter::Writer writer(stdout, (char *) malloc(4096));
-  o5mwriter::Node node((char *) malloc(4096));
-  o5mwriter::Rel rel((char *) malloc(4096));
-  o5mwriter::Way way((char *) malloc(4096));
+  char *buf = (char *) malloc(4096*4);
+  o5mwriter::Writer writer(stdout, 4096, buf);
+  o5mwriter::Node node(4096, buf+4096*1);
+  o5mwriter::Rel rel(4096, buf+4096*2);
+  o5mwriter::Way way(4096, buf+4096*3);
 
   node.id = 1234;
   node.lon = -148.1;
@@ -27,7 +28,7 @@ int main (int argc, char **argv) {
 
   rel.id = 1237;
   rel.add_member(1236, o5mwriter::WAY, "");
-  writer.write(rel0;
+  writer.write(rel);
 
   writer.end();
   return 0;
