@@ -43,19 +43,15 @@ namespace o5mwriter {
     char *buffer;
     size_t length;
     size_t pos;
-    uint64_t prev_id;
     public:
     TYPE type;
     uint64_t id;
     void init (size_t len, char *buf) {
       buffer = buf;
       length = len;
-      prev_id = 0;
     }
-    virtual void reset () {
-      prev_id = id;
-    }
-    virtual size_t data (char **buf) {
+    virtual void reset () {}
+    virtual size_t data (char **buf, size_t prev_id) {
       size_t pos = 0;
       pos += xsigned(buffer+pos, id - prev_id);
       buffer[pos++] = 0x00; // version
@@ -78,8 +74,8 @@ namespace o5mwriter {
       prev_lon = 0;
       prev_lat = 0;
     }
-    size_t data (char **buf) {
-      size_t pos = Doc::data(buf);
+    size_t data (char **buf, size_t prev_id) {
+      size_t pos = Doc::data(buf, prev_id);
       pos += xsigned(buffer+pos, roundl((lon - prev_lon) * 1e7));
       pos += xsigned(buffer+pos, roundl((lat - prev_lat) * 1e7));
       return pos;
@@ -93,16 +89,33 @@ namespace o5mwriter {
     }
   };
   class Way : public Doc {
+    char *refbuf;
+    size_t refpos, reflen;
+    int64_t prev_ref;
     public:
     Way (size_t len, char *buf) {
-      init(len, buf);
+      init(len/2, buf);
+      refbuf = buf+(len+1)/2;
+      reflen = len-(len+1)/2;
+      refpos = 0;
+      prev_ref = 0;
       type = WAY;
     }
     size_t add_ref (uint64_t ref) {
+      fprintf(stderr,"ref=%d, prev_ref=%d\n", ref, prev_ref);
+      refpos += xsigned(refbuf+refpos, ref - prev_ref);
+      prev_ref = ref;
     }
-    size_t data (char **buf) {
-      size_t pos = 0;
+    size_t data (char **buf, size_t prev_id) {
+      size_t pos = Doc::data(buf, prev_id);
+      pos += xunsigned(buffer+pos, refpos);
+      memcpy(buffer+pos, refbuf, refpos);
+      pos += refpos;
       return pos;
+    }
+    void reset () {
+      Doc::reset();
+      refpos = 0;
     }
   };
   class Rel : public Doc {
@@ -116,12 +129,13 @@ namespace o5mwriter {
     size_t add_member (uint64_t ref, TYPE type, const char *role) {
       add_member(ref, type, (char *) role);
     }
-    size_t data (char **buf) {
+    size_t data (char **buf, size_t prev_id) {
       size_t pos = 0;
       return pos;
     }
   };
   class Writer {
+    uint64_t prev_id;
     char *buffer;
     size_t length;
     size_t pos;
@@ -133,11 +147,13 @@ namespace o5mwriter {
       buffer = buf;
       length = len;
       pos = 0;
+      prev_id = 0;
       buffer[pos++] = 0xff;
     }
     void write (Doc &doc) {
       char *buf;
-      size_t size = doc.data(&buf);
+      size_t size = doc.data(&buf, prev_id);
+      prev_id = doc.id;
       size_t n = xunsigned(lenbuf, size);
       if (pos + size + 1 + n > length) flush();
       buffer[pos++] = doc.type;
