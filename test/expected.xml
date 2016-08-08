@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version="0.6" generator="osmconvert 0.8.4">
+	<node id="1234" lat="64.9" lon="-148.1"/>
+	<node id="1235" lat="65.2" lon="-147.9"/>
+	<way id="1236">
+		<nd ref="1234"/>
+		<nd ref="1235"/>
+	</way>
+	<way id="1237">
+		<nd ref="1234"/>
+		<nd ref="1235"/>
+	</way>
+	<way id="1238">
+		<nd ref="3001"/>
+		<nd ref="3004"/>
+	</way>
+	<way id="1239">
+		<nd ref="1006"/>
+		<nd ref="1001"/>
+	</way>
+</osm>
