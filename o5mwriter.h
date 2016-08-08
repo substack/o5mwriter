@@ -10,7 +10,7 @@ namespace o5mwriter {
   const TYPE WAY = 0x11;
   const TYPE REL = 0x12;
   size_t xsigned (char *out, int64_t v) {
-    uint64_t x = abs(v);
+    uint64_t x = abs(v) - (v <= 0 ? 1 : 0);
     uint64_t npow = 1;
     unsigned char r;
     unsigned char m = 0x40;
@@ -18,7 +18,7 @@ namespace o5mwriter {
     while (x > 0) {
       r = (x / npow) % m;
       x -= r * npow;
-      if (i == 0) r = r*2 + (v > 0 ? 0 : 1);
+      if (i == 0) r = r*2 + (v >= 0 ? 0 : 1);
       if (x > 0) r += 0x80;
       out[i++] = r;
       npow *= m;
