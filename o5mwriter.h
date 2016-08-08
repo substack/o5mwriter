@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <string.h>
+#include <math.h>
 
 namespace o5mwriter {
   typedef unsigned char TYPE;
@@ -15,8 +16,8 @@ namespace o5mwriter {
     unsigned char m = 0x40;
     size_t i = 0;
     while (x > 0) {
-      r = x % m;
-      x = (x - r) / (r * npow);
+      r = (x / npow) % m;
+      x -= r * npow;
       if (i == 0) r = r*2 + (v > 0 ? 0 : 1);
       if (x > 0) r += 0x80;
       out[i++] = r;
@@ -30,8 +31,8 @@ namespace o5mwriter {
     size_t i = 0;
     uint64_t npow = 1;
     while (x > 0) {
-      r = x % 0x80;
-      x = (x - r) / (r * npow);
+      r = (x / npow) % 0x80;
+      x -= r * npow;
       if (x > 0) r += 0x80;
       out[i++] = r;
     }
@@ -44,15 +45,23 @@ namespace o5mwriter {
     size_t pos;
     uint64_t prev_id;
     public:
+    TYPE type;
     uint64_t id;
     void init (size_t len, char *buf) {
       buffer = buf;
       length = len;
+      prev_id = 0;
     }
     virtual void reset () {
       prev_id = id;
     }
-    virtual size_t data (char **buf) = 0;
+    virtual size_t data (char **buf) {
+      size_t pos = 0;
+      pos += xsigned(buffer+pos, id - prev_id);
+      buffer[pos++] = 0x00; // version
+      *buf = buffer;
+      return pos;
+    }
     size_t add_tag (char *key, char *value) {
     }
     size_t add_tag (const char *key, const char *value) {
@@ -61,18 +70,24 @@ namespace o5mwriter {
   };
   class Node : public Doc {
     public:
-    double lon;
-    double lat;
+    double lon, lat;
+    double prev_lon, prev_lat;
     Node (size_t len, char *buf) {
       init(len, buf);
+      type = NODE;
+      prev_lon = 0;
+      prev_lat = 0;
     }
     size_t data (char **buf) {
-      size_t pos = 0;
-      pos += xsigned(buffer+pos, id - prev_id);
-      *buf = buffer;
+      size_t pos = Doc::data(buf);
+      pos += xsigned(buffer+pos, roundl((lon - prev_lon) * 1e7));
+      pos += xsigned(buffer+pos, roundl((lat - prev_lat) * 1e7));
       return pos;
     }
     void reset () {
+      Doc::reset();
+      prev_lon = lon;
+      prev_lat = lat;
       lon = 0;
       lat = 0;
     }
@@ -81,6 +96,7 @@ namespace o5mwriter {
     public:
     Way (size_t len, char *buf) {
       init(len, buf);
+      type = WAY;
     }
     size_t add_ref (uint64_t ref) {
     }
@@ -93,6 +109,7 @@ namespace o5mwriter {
     public:
     Rel (size_t len, char *buf) {
       init(len, buf);
+      type = REL;
     }
     size_t add_member (uint64_t ref, TYPE type, char *role) {
     }
@@ -118,21 +135,18 @@ namespace o5mwriter {
       pos = 0;
       buffer[pos++] = 0xff;
     }
-    void write (TYPE type, Doc &doc) {
+    void write (Doc &doc) {
       char *buf;
       size_t size = doc.data(&buf);
       size_t n = xunsigned(lenbuf, size);
       if (pos + size + 1 + n > length) flush();
-      buffer[pos++] = type;
+      buffer[pos++] = doc.type;
       memcpy(buffer+pos, lenbuf, n);
       pos += n;
       memcpy(buffer+pos, buf, size);
       pos += size;
       doc.reset();
     }
-    void write (Node node) { write(NODE, node); }
-    void write (Way way) { write(WAY, way); }
-    void write (Rel rel) { write(REL, rel); }
     void end () {
       if (pos + 1 > length) flush();
       buffer[pos++] = 0xfe;
