@@ -42,15 +42,22 @@ namespace o5mwriter {
     protected:
     char *buffer;
     size_t length;
-    size_t pos;
+    char *tagbuf;
+    size_t taglen;
+    size_t tagpos;
     public:
     TYPE type;
     uint64_t id;
     void init (size_t len, char *buf) {
       buffer = buf;
-      length = len;
+      length = len/2;
+      tagpos = 0;
+      taglen = (len+1)/2;
+      tagbuf = buf+(len-taglen);
     }
-    virtual void reset () {}
+    virtual void reset () {
+      tagpos = 0;
+    }
     virtual size_t data (char **buf, size_t prev_id) {
       size_t pos = 0;
       pos += xsigned(buffer+pos, id - prev_id);
@@ -58,9 +65,25 @@ namespace o5mwriter {
       *buf = buffer;
       return pos;
     }
-    size_t add_tag (char *key, char *value) {
+    size_t tag_data (char *out) {
+      if (tagpos == 0) return 0;
+      size_t pos = xunsigned(out, tagpos);
+      memcpy(out+pos, tagbuf, tagpos);
+      pos += tagpos;
+      return pos;
     }
-    size_t add_tag (const char *key, const char *value) {
+    void add_tag (char *key, char *value) {
+      size_t klen = strlen(key);
+      size_t vlen = strlen(value);
+      tagbuf[tagpos++] = 0x00;
+      memcpy(tagbuf+tagpos, key, klen);
+      tagpos += klen;
+      tagbuf[tagpos++] = 0x00;
+      memcpy(tagbuf+tagpos, value, vlen);
+      tagpos += vlen;
+      tagbuf[tagpos++] = 0x00;
+    }
+    void add_tag (const char *key, const char *value) {
       add_tag((char *) key, (char *) value);
     }
   };
@@ -78,6 +101,7 @@ namespace o5mwriter {
       size_t pos = Doc::data(buf, prev_id);
       pos += xsigned(buffer+pos, roundl((lon - prev_lon) * 1e7));
       pos += xsigned(buffer+pos, roundl((lat - prev_lat) * 1e7));
+      pos += tag_data(buffer+pos);
       return pos;
     }
     void reset () {
@@ -92,6 +116,7 @@ namespace o5mwriter {
     char *refbuf;
     size_t refpos, reflen;
     int64_t prev_ref;
+    bool xreset;
     public:
     Way (size_t len, char *buf) {
       init(len/2, buf);
@@ -100,22 +125,30 @@ namespace o5mwriter {
       refpos = 0;
       prev_ref = 0;
       type = WAY;
+      xreset = false;
     }
     size_t add_ref (uint64_t ref) {
-      fprintf(stderr,"ref=%d, prev_ref=%d\n", ref, prev_ref);
+      if (refpos == 0 && abs(ref-prev_ref) <= 1) {
+        xreset = true;
+        prev_ref = 0;
+      }
       refpos += xsigned(refbuf+refpos, ref - prev_ref);
       prev_ref = ref;
     }
     size_t data (char **buf, size_t prev_id) {
-      size_t pos = Doc::data(buf, prev_id);
+      size_t pos = 0;
+      //if (xreset) (*buf)[pos++] = 0xff;
+      pos += Doc::data(buf, prev_id);
       pos += xunsigned(buffer+pos, refpos);
       memcpy(buffer+pos, refbuf, refpos);
       pos += refpos;
+      pos += tag_data(buffer+pos);
       return pos;
     }
     void reset () {
       Doc::reset();
       refpos = 0;
+      xreset = false;
     }
   };
   class Rel : public Doc {
@@ -124,13 +157,18 @@ namespace o5mwriter {
       init(len, buf);
       type = REL;
     }
+    void reset () {
+      Doc::reset();
+    }
     size_t add_member (uint64_t ref, TYPE type, char *role) {
     }
     size_t add_member (uint64_t ref, TYPE type, const char *role) {
       add_member(ref, type, (char *) role);
     }
     size_t data (char **buf, size_t prev_id) {
-      size_t pos = 0;
+      size_t pos = Doc::data(buf, prev_id);
+      // ...
+      pos += tag_data(buffer+pos);
       return pos;
     }
   };
