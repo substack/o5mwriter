@@ -10,7 +10,7 @@ namespace o5mwriter {
   const TYPE WAY = 0x11;
   const TYPE REL = 0x12;
   size_t xsigned (char *out, int64_t v) {
-    uint64_t x = abs(v) - (v <= 0 ? 1 : 0);
+    uint64_t x = abs(v) - (v < 0 ? 1 : 0);
     uint64_t npow = 1;
     unsigned char r;
     unsigned char m = 0x40;
@@ -18,7 +18,7 @@ namespace o5mwriter {
     while (x > 0) {
       r = (x / npow) % m;
       x -= r * npow;
-      if (i == 0) r = r*2 + (v >= 0 ? 0 : 1);
+      if (i == 0) r = r*2 + (v > 0 ? 0 : 1);
       if (x > 0) r += 0x80;
       out[i++] = r;
       npow *= m;
@@ -91,7 +91,7 @@ namespace o5mwriter {
   class Way : public Doc {
     char *refbuf;
     size_t refpos, reflen;
-    int64_t prev_ref;
+    uint64_t prev_ref;
     public:
     Way (size_t len, char *buf) {
       init(len/2, buf);
@@ -102,7 +102,6 @@ namespace o5mwriter {
       type = WAY;
     }
     size_t add_ref (uint64_t ref) {
-      fprintf(stderr,"ref=%d, prev_ref=%d\n", ref, prev_ref);
       refpos += xsigned(refbuf+refpos, ref - prev_ref);
       prev_ref = ref;
     }
