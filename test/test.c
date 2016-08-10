@@ -10,32 +10,32 @@ int main (int argc, char **argv) {
   //o5mwriter::Rel rel(4096, buf+4096*2);
 
   node.id = 1234;
-  node.lon = -148.1;
+  node.lon = -148.25;
   node.lat = 64.9;
   node.add_tag("hey", "cool");
   writer.write(node);
 
   node.id = 1235;
-  node.lon = -147.9;
+  node.lon = -147.75;
   node.lat = 65.2;
   writer.write(node);
 
   way.id = 1236;
   way.add_ref(1234);
   way.add_ref(1235);
-  way.add_tag("beep", "boop");
+  way.add_tag("one", "two");
   writer.write(way);
 
   way.id = 1237;
   way.add_ref(1234);
   way.add_ref(1235);
-  way.add_tag("beep", "boop");
+  way.add_tag("three", "four");
   writer.write(way);
 
   way.id = 1238;
   way.add_ref(3000);
   way.add_ref(3003);
-  way.add_tag("beep", "boop");
+  way.add_tag("five", "six");
   writer.write(way);
 
   way.id = 1239;
