@@ -10,7 +10,9 @@ namespace o5mwriter {
   const TYPE WAY = 0x11;
   const TYPE REL = 0x12;
   size_t xsigned (char *out, int64_t v) {
-    uint64_t x = abs(v) - (v < 0 ? 1 : 0);
+    //uint64_t x = abs(v) - (v < 0 ? 1 : 0);
+    uint64_t x = abs(v);
+    if (v == 0) x++;
     uint64_t npow = 1;
     unsigned char r;
     unsigned char m = 0x40;
@@ -18,7 +20,8 @@ namespace o5mwriter {
     while (x > 0) {
       r = (x / npow) % m;
       x -= r * npow;
-      if (i == 0) r = r*2 + (v > 0 ? 0 : 1);
+      //if (i == 0) r = r*2 + (v >= 0 ? 0 : 1);
+      if (i == 0) r = r*2 - (v < 0 ? 1 : 0);
       if (x > 0) r += 0x80;
       out[i++] = r;
       npow *= m;
@@ -62,7 +65,6 @@ namespace o5mwriter {
       size_t pos = 0;
       pos += xsigned(buffer+pos, id - prev_id);
       buffer[pos++] = 0x00; // version
-      *buf = buffer;
       return pos;
     }
     size_t tag_data (char *out) {
@@ -96,6 +98,7 @@ namespace o5mwriter {
       prev_lat = 0;
     }
     size_t data (char **buf, size_t prev_id) {
+      *buf = buffer;
       size_t pos = Doc::data(buf, prev_id);
       pos += xsigned(buffer+pos, roundl((lon - prev_lon) * 1e7));
       pos += xsigned(buffer+pos, roundl((lat - prev_lat) * 1e7));
@@ -126,16 +129,17 @@ namespace o5mwriter {
       xreset = false;
     }
     size_t add_ref (uint64_t ref) {
-      if (refpos == 0 && abs(ref-prev_ref) <= 1) {
-        xreset = true;
-        prev_ref = 0;
+      if (refpos == 0 && ref-prev_ref == -1) {
+        //xreset = true;
+        //prev_ref = 1;
       }
       refpos += xsigned(refbuf+refpos, ref - prev_ref);
       prev_ref = ref;
     }
     size_t data (char **buf, size_t prev_id) {
       size_t pos = 0;
-      //if (xreset) (*buf)[pos++] = 0xff;
+      *buf = buffer;
+      if (xreset) (*buf)[pos++] = 0xff;
       pos += Doc::data(buf, prev_id);
       pos += xunsigned(buffer+pos, refpos);
       memcpy(buffer+pos, refbuf, refpos);

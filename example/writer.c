@@ -23,13 +23,19 @@ int main (int argc, char **argv) {
   way.id = 1236;
   way.add_ref(1234);
   way.add_ref(1235);
-  way.add_tag("beep", "boop");
+  way.add_tag("one", "two");
   writer.write(way);
 
   way.id = 1237;
   way.add_ref(1234);
   way.add_ref(1235);
-  way.add_tag("beep", "boop");
+  way.add_tag("three", "four");
+  writer.write(way);
+
+  way.id = 1238;
+  way.add_ref(1235);
+  way.add_ref(1236);
+  way.add_tag("five", "six");
   writer.write(way);
 
   /*
