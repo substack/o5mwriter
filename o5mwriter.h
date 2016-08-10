@@ -115,7 +115,6 @@ namespace o5mwriter {
     char *refbuf;
     size_t refpos, reflen;
     int64_t prev_ref;
-    bool xreset;
     public:
     Way (size_t len, char *buf) {
       init(len/2, buf);
@@ -124,20 +123,14 @@ namespace o5mwriter {
       refpos = 0;
       prev_ref = 0;
       type = WAY;
-      xreset = false;
     }
     size_t add_ref (uint64_t ref) {
-      if (refpos == 0 && ref-prev_ref == -1) {
-        //xreset = true;
-        //prev_ref = 1;
-      }
       refpos += xsigned(refbuf+refpos, ref - prev_ref);
       prev_ref = ref;
     }
     size_t data (char **buf, size_t prev_id) {
       size_t pos = 0;
       *buf = buffer;
-      if (xreset) (*buf)[pos++] = 0xff;
       pos += Doc::data(buf, prev_id);
       pos += xunsigned(buffer+pos, refpos);
       memcpy(buffer+pos, refbuf, refpos);
@@ -148,7 +141,6 @@ namespace o5mwriter {
     void reset () {
       Doc::reset();
       refpos = 0;
-      xreset = false;
     }
   };
   class Rel : public Doc {
