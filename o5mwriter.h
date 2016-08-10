@@ -10,7 +10,6 @@ namespace o5mwriter {
   const TYPE WAY = 0x11;
   const TYPE REL = 0x12;
   size_t xsigned (char *out, int64_t v) {
-    //uint64_t x = abs(v) - (v < 0 ? 1 : 0);
     uint64_t x = abs(v);
     if (v == 0) x++;
     uint64_t npow = 1;
@@ -20,7 +19,6 @@ namespace o5mwriter {
     while (x > 0) {
       r = (x / npow) % m;
       x -= r * npow;
-      //if (i == 0) r = r*2 + (v >= 0 ? 0 : 1);
       if (i == 0) r = r*2 - (v < 0 ? 1 : 0);
       if (x > 0) r += 0x80;
       out[i++] = r;
@@ -40,9 +38,6 @@ namespace o5mwriter {
       out[i++] = r;
     }
     return i;
-  }
-  double xgeo (double x) {
-    return roundl(x * 1e7) - (x < 0 ? 1 : 0);
   }
   class Doc {
     protected:
@@ -103,8 +98,8 @@ namespace o5mwriter {
     size_t data (char **buf, size_t prev_id) {
       *buf = buffer;
       size_t pos = Doc::data(buf, prev_id);
-      pos += xsigned(buffer+pos, xgeo(lon - prev_lon));
-      pos += xsigned(buffer+pos, xgeo(lat - prev_lat));
+      pos += xsigned(buffer+pos, roundl((lon-prev_lon)*1e7));
+      pos += xsigned(buffer+pos, roundl((lat-prev_lat)*1e7));
       pos += tag_data(buffer+pos);
       return pos;
     }
