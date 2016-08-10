@@ -41,6 +41,9 @@ namespace o5mwriter {
     }
     return i;
   }
+  double xgeo (double x) {
+    return roundl(x * 1e7) - (x < 0 ? 1 : 0);
+  }
   class Doc {
     protected:
     char *buffer;
@@ -100,8 +103,8 @@ namespace o5mwriter {
     size_t data (char **buf, size_t prev_id) {
       *buf = buffer;
       size_t pos = Doc::data(buf, prev_id);
-      pos += xsigned(buffer+pos, roundl((lon - prev_lon) * 1e7));
-      pos += xsigned(buffer+pos, roundl((lat - prev_lat) * 1e7));
+      pos += xsigned(buffer+pos, xgeo(lon - prev_lon));
+      pos += xsigned(buffer+pos, xgeo(lat - prev_lat));
       pos += tag_data(buffer+pos);
       return pos;
     }
