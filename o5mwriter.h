@@ -144,22 +144,41 @@ namespace o5mwriter {
     }
   };
   class Rel : public Doc {
+    char *membuf;
+    size_t mempos, memlen;
+    int64_t prev_ref;
     public:
     Rel (size_t len, char *buf) {
-      init(len, buf);
+      init(len/2, buf);
+      memlen = len-len/2;
+      membuf = buf+len/2;
+      mempos = 0;
+      prev_ref = 0;
       type = REL;
     }
     void reset () {
       Doc::reset();
+      mempos = 0;
     }
-    size_t add_member (uint64_t ref, TYPE type, char *role) {
+    void add_member (uint64_t ref, TYPE type, char *role) {
+      mempos += xsigned(membuf+mempos, ref-prev_ref);
+      membuf[mempos++] = 0x00;
+      membuf[mempos++] = 0x20 + type;
+      size_t rlen = strlen(role);
+      memcpy(membuf+mempos, role, rlen);
+      mempos += rlen;
+      membuf[mempos++] = 0x00;
+      prev_ref = ref;
     }
-    size_t add_member (uint64_t ref, TYPE type, const char *role) {
+    void add_member (uint64_t ref, TYPE type, const char *role) {
       add_member(ref, type, (char *) role);
     }
     size_t data (char **buf, size_t prev_id) {
+      *buf = buffer;
       size_t pos = Doc::data(buf, prev_id);
-      // ...
+      pos += xunsigned(buffer+pos, mempos);
+      memcpy(buffer+pos, membuf, mempos);
+      pos += mempos;
       pos += tag_data(buffer+pos);
       return pos;
     }

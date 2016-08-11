@@ -6,8 +6,8 @@ int main (int argc, char **argv) {
   char *buf = (char *) malloc(4096*4);
   o5mwriter::Writer writer(stdout, 4096, buf);
   o5mwriter::Node node(4096, buf+4096*1);
-  o5mwriter::Way way(4096, buf+4096*3);
-  //o5mwriter::Rel rel(4096, buf+4096*2);
+  o5mwriter::Way way(4096, buf+4096*2);
+  o5mwriter::Rel rel(4096, buf+4096*3);
 
   node.id = 1234;
   node.lon = -148.25;
@@ -44,11 +44,10 @@ int main (int argc, char **argv) {
   way.add_tag("beep", "boop");
   writer.write(way);
 
-  /*
-  rel.id = 1237;
+  rel.id = 1240;
   rel.add_member(1236, o5mwriter::WAY, "");
+  rel.add_member(1237, o5mwriter::WAY, "");
   writer.write(rel);
-  */
 
   writer.end();
   return 0;

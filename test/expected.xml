@@ -24,4 +24,8 @@
 		<nd ref="1000"/>
 		<tag k="beep" v="boop"/>
 	</way>
+	<relation id="1240">
+		<member type="way" ref="1236" role=""/>
+		<member type="way" ref="1237" role=""/>
+	</relation>
 </osm>
