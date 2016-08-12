@@ -4,6 +4,7 @@
 
 int main (int argc, char **argv) {
   char *buf = (char *) malloc(4096*4);
+  char *sbuf = (char *) malloc(o5mwriter::STRSIZE);
   o5mwriter::Writer writer(stdout, 4096, buf);
   o5mwriter::Node node(4096, buf+4096*1);
   o5mwriter::Way way(4096, buf+4096*2);

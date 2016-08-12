@@ -9,6 +9,7 @@ namespace o5mwriter {
   const TYPE NODE = 0x10;
   const TYPE WAY = 0x11;
   const TYPE REL = 0x12;
+  const size_t STRSIZE = 15000 * 256;
   size_t xsigned (char *out, int64_t v) {
     uint64_t x = abs(v);
     if (v == 0) x++;
@@ -231,10 +232,13 @@ namespace o5mwriter {
     char lenbuf[8];
     FILE *handle;
     char *strings;
+    size_t strpos;
     public:
-    Writer (FILE *fh, size_t len, char *buf) {
+    Writer (FILE *fh, size_t len, char *buf, char *sbuf) {
       handle = fh;
       buffer = buf;
+      strings = sbuf;
+      strpos = 0;
       length = len;
       pos = 0;
       prev_id = 0;
