@@ -40,7 +40,7 @@ namespace o5mwriter {
     }
     return i;
   }
-  size_t stringpair (char *out, char *a, char *b) {
+  size_t strpair (char *out, char *a, char *b) {
     size_t alen = strlen(a);
     size_t blen = strlen(b);
     size_t pos = 0;
@@ -50,6 +50,16 @@ namespace o5mwriter {
     out[pos++] = 0x00;
     memcpy(out+pos, b, blen);
     pos += blen;
+    out[pos++] = 0x00;
+    return pos;
+  }
+  size_t prestr (char *out, char pre, char *str) {
+    size_t pos = 0;
+    out[pos++] = 0x00;
+    out[pos++] = pre;
+    size_t len = strlen(str);
+    memcpy(out+pos, str, len);
+    pos += len;
     out[pos++] = 0x00;
     return pos;
   }
@@ -99,7 +109,7 @@ namespace o5mwriter {
           pos += xsigned(buffer+pos, timestamp-prev_timestamp);
           pos += xsigned(buffer+pos, changeset-prev_changeset);
           tmp[xunsigned(tmp,uid)] = 0x00;
-          pos += stringpair(buffer+pos, tmp, user);
+          pos += strpair(buffer+pos, tmp, user);
         } else {
           buffer[pos++] = 0x00;
         }
@@ -114,15 +124,7 @@ namespace o5mwriter {
       return tagpos;
     }
     void add_tag (char *key, char *value) {
-      size_t klen = strlen(key);
-      size_t vlen = strlen(value);
-      tagbuf[tagpos++] = 0x00;
-      memcpy(tagbuf+tagpos, key, klen);
-      tagpos += klen;
-      tagbuf[tagpos++] = 0x00;
-      memcpy(tagbuf+tagpos, value, vlen);
-      tagpos += vlen;
-      tagbuf[tagpos++] = 0x00;
+      tagpos += strpair(tagbuf+tagpos, key, value);
     }
     void add_tag (const char *key, const char *value) {
       add_tag((char *) key, (char *) value);
@@ -205,12 +207,7 @@ namespace o5mwriter {
     }
     void add_member (uint64_t ref, TYPE type, char *role) {
       mempos += xsigned(membuf+mempos, ref-prev_ref);
-      membuf[mempos++] = 0x00;
-      membuf[mempos++] = 0x20 + type;
-      size_t rlen = strlen(role);
-      memcpy(membuf+mempos, role, rlen);
-      mempos += rlen;
-      membuf[mempos++] = 0x00;
+      mempos += prestr(membuf+mempos, 0x20 + type, role);
       prev_ref = ref;
     }
     void add_member (uint64_t ref, TYPE type, const char *role) {
