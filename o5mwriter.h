@@ -40,6 +40,19 @@ namespace o5mwriter {
     }
     return i;
   }
+  size_t stringpair (char *out, char *a, char *b) {
+    size_t alen = strlen(a);
+    size_t blen = strlen(b);
+    size_t pos = 0;
+    out[pos++] = 0x00;
+    memcpy(out+pos, a, alen);
+    pos += alen;
+    out[pos++] = 0x00;
+    memcpy(out+pos, b, blen);
+    pos += blen;
+    out[pos++] = 0x00;
+    return pos;
+  }
   class Doc {
     protected:
     char *buffer;
@@ -85,15 +98,8 @@ namespace o5mwriter {
         if (timestamp) {
           pos += xsigned(buffer+pos, timestamp-prev_timestamp);
           pos += xsigned(buffer+pos, changeset-prev_changeset);
-          buffer[pos++] = 0x00;
-          size_t xsize = xunsigned(tmp, uid);
-          memcpy(buffer+pos, tmp, xsize);
-          pos += xsize;
-          buffer[pos++] = 0x00;
-          xsize = strlen(user);
-          memcpy(buffer+pos, user, xsize);
-          pos += xsize;
-          buffer[pos++] = 0x00;
+          tmp[xunsigned(tmp,uid)] = 0x00;
+          pos += stringpair(buffer+pos, tmp, user);
         } else {
           buffer[pos++] = 0x00;
         }
@@ -227,6 +233,7 @@ namespace o5mwriter {
     size_t pos;
     char lenbuf[8];
     FILE *handle;
+    char *strings;
     public:
     Writer (FILE *fh, size_t len, char *buf) {
       handle = fh;
