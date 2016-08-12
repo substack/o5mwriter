@@ -36,6 +36,7 @@ namespace o5mwriter {
       x -= r * npow;
       if (x > 0) r += 0x80;
       out[i++] = r;
+      npow *= 0x80;
     }
     return i;
   }
@@ -49,20 +50,56 @@ namespace o5mwriter {
     public:
     TYPE type;
     uint64_t id;
+    uint64_t version;
+    int64_t timestamp;
+    uint64_t changeset;
+    uint64_t uid;
+    char *user;
+    uint64_t prev_timestamp;
+    uint64_t prev_changeset;
+    char tmp[8];
     void init (size_t len, char *buf) {
       buffer = buf;
       length = len/2;
-      tagpos = 0;
       taglen = (len+1)/2;
       tagbuf = buf+(len-taglen);
+      timestamp = 0;
+      changeset = 0;
+      reset();
     }
     virtual void reset () {
+      prev_timestamp = timestamp;
+      prev_changeset = changeset;
       tagpos = 0;
+      version = 0;
+      timestamp = 0;
+      changeset = 0;
+      uid = 0;
+      user = NULL;
     }
     virtual size_t data (char **buf, size_t prev_id) {
       size_t pos = 0;
-      pos += xsigned(buffer+pos, id - prev_id);
-      buffer[pos++] = 0x00; // version
+      pos += xsigned(buffer+pos, id-prev_id);
+      if (version) {
+        pos += xunsigned(buffer+pos, version);
+        if (timestamp) {
+          pos += xsigned(buffer+pos, timestamp-prev_timestamp);
+          pos += xsigned(buffer+pos, changeset-prev_changeset);
+          buffer[pos++] = 0x00;
+          size_t xsize = xunsigned(tmp, uid);
+          memcpy(buffer+pos, tmp, xsize);
+          pos += xsize;
+          buffer[pos++] = 0x00;
+          xsize = strlen(user);
+          memcpy(buffer+pos, user, xsize);
+          pos += xsize;
+          buffer[pos++] = 0x00;
+        } else {
+          buffer[pos++] = 0x00;
+        }
+      } else {
+        buffer[pos++] = 0x00;
+      }
       return pos;
     }
     size_t tag_data (char *out) {

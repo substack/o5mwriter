@@ -24,7 +24,7 @@
 		<nd ref="1000"/>
 		<tag k="beep" v="boop"/>
 	</way>
-	<relation id="1240">
+	<relation id="1240" version="1337" timestamp="2016-08-12T20:21:31Z" changeset="87654321" uid="5555" user="hello">
 		<member type="way" ref="1236" role=""/>
 		<member type="way" ref="1237" role=""/>
 	</relation>

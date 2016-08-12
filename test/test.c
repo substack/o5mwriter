@@ -47,6 +47,11 @@ int main (int argc, char **argv) {
   rel.id = 1240;
   rel.add_member(1236, o5mwriter::WAY, "");
   rel.add_member(1237, o5mwriter::WAY, "");
+  rel.version = 1337;
+  rel.timestamp = 1471033291;
+  rel.changeset = 87654321;
+  rel.uid = 5555;
+  rel.user = (char *) "hello";
   writer.write(rel);
 
   writer.end();
