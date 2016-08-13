@@ -4,11 +4,11 @@
 
 int main (int argc, char **argv) {
   char *buf = (char *) malloc(4096*4);
-  char *sbuf = (char *) malloc(o5mwriter::STRSIZE);
-  o5mwriter::Writer writer(stdout, 4096, buf);
-  o5mwriter::Node node(4096, buf+4096*1);
-  o5mwriter::Way way(4096, buf+4096*2);
-  o5mwriter::Rel rel(4096, buf+4096*3);
+  char *strings = (char *) malloc(o5mwriter::STRSIZE);
+  o5mwriter::Writer writer(stdout, 4096, buf, strings);
+  o5mwriter::Node node(4096, buf+4096*1, strings);
+  o5mwriter::Way way(4096, buf+4096*2, strings);
+  o5mwriter::Rel rel(4096, buf+4096*3, strings);
 
   node.id = 1234;
   node.lon = -148.25;

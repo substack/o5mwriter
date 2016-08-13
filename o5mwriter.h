@@ -42,7 +42,7 @@ namespace o5mwriter {
     }
     return i;
   }
-  size_t strpack (char *out, char *s) {
+  size_t strpack (char *out, char *strings, char *s) {
     size_t pos = 0;
     size_t len = strlen(s);
     out[pos++] = 0x00;
@@ -50,10 +50,10 @@ namespace o5mwriter {
     pos += len;
     return pos;
   }
-  size_t strpair (char *out, char *a, char *b) {
+  size_t strpair (char *out, char *strings, char *a, char *b) {
     size_t pos = 0;
-    pos += strpack(out+pos, a);
-    pos += strpack(out+pos, b);
+    pos += strpack(out+pos, strings, a);
+    pos += strpack(out+pos, strings, b);
     out[pos++] = 0x00;
     return pos;
   }
@@ -74,12 +74,14 @@ namespace o5mwriter {
     char *user;
     uint64_t prev_timestamp;
     uint64_t prev_changeset;
+    char *strings;
     char tmp[8];
-    void init (size_t len, char *buf) {
+    void init (size_t len, char *buf, char *sbuf) {
       buffer = buf;
       length = len/2;
       taglen = (len+1)/2;
       tagbuf = buf+(len-taglen);
+      strings = sbuf;
       timestamp = 0;
       changeset = 0;
       reset();
@@ -103,7 +105,7 @@ namespace o5mwriter {
           pos += xsigned(buffer+pos, timestamp-prev_timestamp);
           pos += xsigned(buffer+pos, changeset-prev_changeset);
           tmp[xunsigned(tmp,uid)] = 0x00;
-          pos += strpair(buffer+pos, tmp, user);
+          pos += strpair(buffer+pos, strings, tmp, user);
         } else {
           buffer[pos++] = 0x00;
         }
@@ -118,7 +120,7 @@ namespace o5mwriter {
       return tagpos;
     }
     void add_tag (char *key, char *value) {
-      tagpos += strpair(tagbuf+tagpos, key, value);
+      tagpos += strpair(tagbuf+tagpos, strings, key, value);
     }
     void add_tag (const char *key, const char *value) {
       add_tag((char *) key, (char *) value);
@@ -128,8 +130,8 @@ namespace o5mwriter {
     public:
     double lon, lat;
     double prev_lon, prev_lat;
-    Node (size_t len, char *buf) {
-      init(len, buf);
+    Node (size_t len, char *buf, char *sbuf) {
+      init(len, buf, sbuf);
       type = NODE;
       prev_lon = 0;
       prev_lat = 0;
@@ -155,8 +157,8 @@ namespace o5mwriter {
     size_t refpos, reflen;
     int64_t prev_ref;
     public:
-    Way (size_t len, char *buf) {
-      init(len/2, buf);
+    Way (size_t len, char *buf, char *sbuf) {
+      init(len/2, buf, sbuf);
       refbuf = buf+(len+1)/2;
       reflen = len-(len+1)/2;
       refpos = 0;
@@ -188,10 +190,10 @@ namespace o5mwriter {
     size_t mempos, memlen, rolelen;
     int64_t prev_ref;
     public:
-    Rel (size_t len, char *buf) {
+    Rel (size_t len, char *buf, char *sbuf) {
       rolebuf = buf;
       rolelen = 128;
-      init(len/2, buf+rolelen);
+      init(len/2, buf+rolelen, sbuf);
       memlen = (len-rolelen)-(len-rolelen)/2;
       membuf = buf+(len-rolelen)/2;
       mempos = 0;
@@ -208,7 +210,7 @@ namespace o5mwriter {
       size_t rlen = strlen(role);
       assert(rlen < rolelen);
       memcpy(rolebuf+1, role, rlen);
-      mempos += strpack(membuf+mempos, rolebuf);
+      mempos += strpack(membuf+mempos, strings, rolebuf);
       membuf[mempos++] = 0x00;
       prev_ref = ref;
     }
