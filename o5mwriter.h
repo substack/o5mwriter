@@ -3,6 +3,7 @@
 #include <inttypes.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 
 namespace o5mwriter {
   typedef unsigned char TYPE;
@@ -41,26 +42,18 @@ namespace o5mwriter {
     }
     return i;
   }
-  size_t strpair (char *out, char *a, char *b) {
-    size_t alen = strlen(a);
-    size_t blen = strlen(b);
+  size_t strpack (char *out, char *s) {
     size_t pos = 0;
+    size_t len = strlen(s);
     out[pos++] = 0x00;
-    memcpy(out+pos, a, alen);
-    pos += alen;
-    out[pos++] = 0x00;
-    memcpy(out+pos, b, blen);
-    pos += blen;
-    out[pos++] = 0x00;
+    memcpy(out+pos, s, len);
+    pos += len;
     return pos;
   }
-  size_t prestr (char *out, char pre, char *str) {
+  size_t strpair (char *out, char *a, char *b) {
     size_t pos = 0;
-    out[pos++] = 0x00;
-    out[pos++] = pre;
-    size_t len = strlen(str);
-    memcpy(out+pos, str, len);
-    pos += len;
+    pos += strpack(out+pos, a);
+    pos += strpack(out+pos, b);
     out[pos++] = 0x00;
     return pos;
   }
@@ -191,13 +184,16 @@ namespace o5mwriter {
   };
   class Rel : public Doc {
     char *membuf;
-    size_t mempos, memlen;
+    char *rolebuf;
+    size_t mempos, memlen, rolelen;
     int64_t prev_ref;
     public:
     Rel (size_t len, char *buf) {
-      init(len/2, buf);
-      memlen = len-len/2;
-      membuf = buf+len/2;
+      rolebuf = buf;
+      rolelen = 128;
+      init(len/2, buf+rolelen);
+      memlen = (len-rolelen)-(len-rolelen)/2;
+      membuf = buf+(len-rolelen)/2;
       mempos = 0;
       prev_ref = 0;
       type = REL;
@@ -208,7 +204,12 @@ namespace o5mwriter {
     }
     void add_member (uint64_t ref, TYPE type, char *role) {
       mempos += xsigned(membuf+mempos, ref-prev_ref);
-      mempos += prestr(membuf+mempos, 0x20 + type, role);
+      rolebuf[0] = 0x20 + type;
+      size_t rlen = strlen(role);
+      assert(rlen < rolelen);
+      memcpy(rolebuf+1, role, rlen);
+      mempos += strpack(membuf+mempos, rolebuf);
+      membuf[mempos++] = 0x00;
       prev_ref = ref;
     }
     void add_member (uint64_t ref, TYPE type, const char *role) {
