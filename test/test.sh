@@ -1,4 +1,4 @@
 #!/bin/bash
 cd $(dirname $0)
-diff <(./test | osmconvert -) expected.xml
+./test | osmconvert - | diff - expected.xml
 exit $?
