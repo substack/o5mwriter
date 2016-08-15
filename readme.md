@@ -11,26 +11,27 @@ c++ o5m encoder
 
 int main (int argc, char **argv) {
   char *buf = (char *) malloc(4096*4);
-  o5mwriter::Writer writer(stdout, 4096, buf);
-  o5mwriter::Node node(4096, buf+4096*1);
-  o5mwriter::Rel rel(4096, buf+4096*2);
-  o5mwriter::Way way(4096, buf+4096*3);
+  char *strings = (char *) malloc(o5mwriter::STRSIZE);
+  o5mwriter::Writer writer(stdout, 4096, buf, strings);
+  o5mwriter::Node node(4096, buf+4096*1, strings);
+  o5mwriter::Way way(4096, buf+4096*2, strings);
+  o5mwriter::Rel rel(4096, buf+4096*3, strings);
 
   node.id = 1234;
-  node.lon = -148.1;
+  node.lon = -148.25;
   node.lat = 64.9;
   node.add_tag("hey", "cool");
   writer.write(node);
 
   node.id = 1235;
-  node.lon = -147.9;
+  node.lon = -147.75;
   node.lat = 65.2;
   writer.write(node);
 
   way.id = 1236;
   way.add_ref(1234);
   way.add_ref(1235);
-  way.add_tag("beep", "boop");
+  way.add_tag("one", "two");
   writer.write(way);
 
   rel.id = 1237;
@@ -48,10 +49,12 @@ int main (int argc, char **argv) {
 #include <o5mwriter.h>
 ```
 
-## `o5mwriter::Writer writer(FILE *fh, size_t size, char *buf)`
+## `o5mwriter::Writer writer(FILE *fh, size_t size, char *buf, char *strings)`
 
 Create a new `Writer` instance from a writable file handle `fh` and a `buf`
 temporary buffer of length `size`.
+
+Allocate a string table `strings` of size `o5mwriter::STRSIZE` bytes.
 
 ## `writer.write(Doc doc)`
 
@@ -75,9 +78,11 @@ Set this property to assign an `id`.
 
 Add a tag as a `key, value` pair.
 
-## `o5mwriter::Node node(size_t size, char *buf)`
+## `o5mwriter::Node node(size_t size, char *buf, char *strings)`
 
 Create a new `Node` instance from a working buffer `buf` of length `size`.
+
+Pass in the same `strings` table given to the `Writer` constructor.
 
 `Node` instances are subclasses of `Doc`.
 
@@ -89,9 +94,11 @@ Set this property to assign a longitude in decimal degrees.
 
 Set this property to assign a latitude in decimal degrees.
 
-## `o5mwriter::Way way(size_t size, char *buf)`
+## `o5mwriter::Way way(size_t size, char *buf, char *strings)`
 
 Create a new `Way` instance from a working buffer `buf` of length `size`.
+
+Pass in the same `strings` table given to the `Writer` constructor.
 
 `Way` instances are subclasses of `Doc`.
 
@@ -99,9 +106,11 @@ Create a new `Way` instance from a working buffer `buf` of length `size`.
 
 Associate a ref by its `id` with this way.
 
-## `o5mwriter::Rel(size_t size, char *buf)`
+## `o5mwriter::Rel(size_t size, char *buf, char *strings)`
 
 Create a new `Rel` instance from a working buffer `buf` of length `size`.
+
+Pass in the same `strings` table given to the `Writer` constructor.
 
 `Rel` instances are subclasses of `Doc`.
 
