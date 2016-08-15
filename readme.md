@@ -119,6 +119,10 @@ These values are defined for convenience:
 * `o5mwriter::WAY` - `0x11`
 * `o5mwriter::REL` - `0x12`
 
+# todo
+
+* binary search tree for string table lookup instead of linear scan
+
 # license
 
 BSD
