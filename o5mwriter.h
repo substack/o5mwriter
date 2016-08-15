@@ -1,3 +1,6 @@
+#ifndef O5MWRITER_H
+#define O5MWRITER_H
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <inttypes.h>
@@ -291,3 +294,4 @@ namespace o5mwriter {
     }
   };
 }
+#endif
