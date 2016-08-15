@@ -50,7 +50,7 @@ namespace o5mwriter {
     }
     return 0;
   }
-  size_t strpack (char *out, char *strings, char *s) {
+  size_t strpack (char *out, char *s) {
     size_t pos = 0;
     size_t len = strlen(s);
     out[pos++] = 0x00;
@@ -60,8 +60,8 @@ namespace o5mwriter {
   }
   size_t strpair (char *out, char *strings, char *a, char *b) {
     size_t pos = 0;
-    pos += strpack(out+pos, strings, a);
-    pos += strpack(out+pos, strings, b);
+    pos += strpack(out+pos, a);
+    pos += strpack(out+pos, b);
     out[pos++] = 0x00;
 
     size_t find = strfind(pos-1, out+1, strings);
@@ -229,7 +229,7 @@ namespace o5mwriter {
       size_t rlen = strlen(role);
       assert(rlen < rolelen);
       memcpy(rolebuf+1, role, rlen);
-      mempos += strpack(membuf+mempos, strings, rolebuf);
+      mempos += strpack(membuf+mempos, rolebuf);
       membuf[mempos++] = 0x00;
       prev_ref = ref;
     }
