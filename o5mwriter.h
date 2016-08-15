@@ -10,7 +10,7 @@ namespace o5mwriter {
   const TYPE NODE = 0x10;
   const TYPE WAY = 0x11;
   const TYPE REL = 0x12;
-  const size_t STRSIZE = 15000 * 256;
+  const size_t STRSIZE = 15000 * 256 + sizeof(size_t);
   size_t xsigned (char *out, int64_t v) {
     uint64_t x = abs(v);
     if (v == 0) x++;
@@ -42,6 +42,14 @@ namespace o5mwriter {
     }
     return i;
   }
+  size_t strfind (size_t slen, char *str, char *strings) {
+    size_t len = *((size_t *) strings);
+    char *data = strings + sizeof(size_t);
+    for (size_t i = 0; i < len; i++) {
+      if (memcmp(data+i*256, str, slen) == 0) return len - i;
+    }
+    return 0;
+  }
   size_t strpack (char *out, char *strings, char *s) {
     size_t pos = 0;
     size_t len = strlen(s);
@@ -55,7 +63,18 @@ namespace o5mwriter {
     pos += strpack(out+pos, strings, a);
     pos += strpack(out+pos, strings, b);
     out[pos++] = 0x00;
-    return pos;
+
+    size_t find = strfind(pos-1, out+1, strings);
+    size_t slen = ((size_t *) strings)[0];
+    char *ptr = strings + sizeof(size_t) + slen * 256;
+
+    if (find == 0) { // not found, insert record
+      ((size_t *) strings)[0]++;
+      memcpy(ptr, out+1, pos-1);
+      return pos;
+    } else { // found in string table
+      return xunsigned(out, find);
+    }
   }
   class Doc {
     protected:
@@ -246,6 +265,7 @@ namespace o5mwriter {
       pos = 0;
       prev_id = 0;
       buffer[pos++] = 0xff;
+      ((size_t *) sbuf)[0] = 0;
     }
     void write (Doc &doc) {
       char *buf;

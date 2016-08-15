@@ -42,7 +42,7 @@ int main (int argc, char **argv) {
   way.id = 1239;
   way.add_ref(1005);
   way.add_ref(1000);
-  way.add_tag("beep", "boop");
+  way.add_tag("hey", "cool");
   writer.write(way);
 
   rel.id = 1240;
